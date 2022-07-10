@@ -541,6 +541,19 @@ jobs:
   publish:
     description: publish binary artifacts
     executor: ubuntu
+    parameters:
+      linux:
+        default: false
+        description: publish linux binaries?
+        type: boolean
+      darwin:
+        default: false
+        description: publish darwin binaries?
+        type: boolean
+      appimage:
+        default: false
+        description: publish appimage binaries?
+        type: boolean
     steps:
       - run:
           name: Install git jq curl
@@ -551,12 +564,21 @@ jobs:
       - install_ipfs
       - attach_workspace:
           at: "."
-      - run:
-          name: Create bundles
-          command: ./scripts/build-bundle.sh
-      - run:
-          name: Publish release
-          command: ./scripts/publish-release.sh
+      - when:
+          condition: << parameters.linux >>
+          steps:
+            - run: ./scripts/build-arch-bundle.sh linux
+            - run: ./scripts/publish-arch-release.sh linux
+      - when:
+          condition: << parameters.darwin>>
+          steps:
+            - run: ./scripts/build-arch-bundle.sh darwin
+            - run: ./scripts/publish-arch-release.sh darwin
+      - when:
+          condition: << parameters.appimage >>
+          steps:
+            - run: ./scripts/build-appimage-bundle.sh
+            - run: ./scripts/publish-arch-release.sh appimage
 
   build-snapcraft:
     description: build and push snapcraft
@@ -1062,10 +1084,34 @@ workflows:
               only:
                 - /^v\d+\.\d+\.\d+(-rc\d+)?$/
       - publish:
+          name: publish-macos
+          requires:
+            - build-macos
+          darwin: true
+          filters:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only:
+                - /^v\d+\.\d+\.\d+(-rc\d+)?$/
+      - publish:
+          name: publish-linux
           requires:
             - build-linux
-            - build-macos
+          linux: true
+          filters:
+            branches:
+              ignore:
+                - /.*/
+            tags:
+              only:
+                - /^v\d+\.\d+\.\d+(-rc\d+)?$/
+      - publish:
+          name: publish-appimage
+          requires:
             - build-appimage
+          appimage: true
           filters:
             branches:
               ignore:
