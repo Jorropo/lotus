@@ -91,6 +91,7 @@ do
   echo "Uploading ${RELEASE_FILE}..."
   curl \
     --request POST \
+    --fail
     --header "Authorization: token ${GITHUB_TOKEN}" \
     --header "Content-Type: application/octet-stream" \
     --data-binary "@${RELEASE_FILE}" \
@@ -111,6 +112,7 @@ do
   echo "Uploading release bundle: ${MISC}"
   curl \
     --request POST \
+    --fail
     --header "Authorization: token ${GITHUB_TOKEN}" \
     --header "Content-Type: application/octet-stream" \
     --data-binary "@${MISC}" \
